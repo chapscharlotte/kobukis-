@@ -131,8 +131,9 @@ int main(void) {
   
   // CALCULUS
   float theta = atan((current_y-initial_y)/(current_x-initial_x);
-  float distance = sqrt((current_y-initial_y)^2+(current_x-initial_x)^2);
-  deviation_1 = pi+theta-current_angle;
+  float start_distance = sqrt((current_y-initial_y)^2+(current_x-initial_x)^2);
+  s = sgn(current_angle-theta);
+  deviation_1 = s*(pi+theta)-current_angle;
   deviation_2 = initial_angle-(pi+theta);
   
   
@@ -155,12 +156,11 @@ int main(void) {
     // HANDLE STATES
     switch(state) {
       case OFF: {
-        // transition logic
-        if (is_button_pressed(&sensors)) {
-          state = DRIVING;
-          prev_encoder = sensors.rightWheelEncoder;
+       if (master==1)
+          state = ALIGNING; 
+          float deviation=0; 
+          mpu9250_start_gyro_integration();
         } else {
-          // perform state-specific actions here
           display_write("OFF", DISPLAY_LINE_0);
           kobukiDriveDirect(0,0);
           state = OFF;
@@ -168,59 +168,43 @@ int main(void) {
         break; // each case needs to end with break!
       }
 
-      case DRIVING: {
+      case ALIGNING: {
         // transition logic
-        uint16_t next_encoder = sensors.rightWheelEncoder;
-        distance = measure_distance(next_encoder, prev_encoder);
+        deviation = mpu9250_read_gyro_integration().z_axis;
         char buf[16];
-        snprintf(buf,16,"%f", distance);
+        snprintf(buf,16,"%f", deviation_1-deviation);
         display_write(buf, DISPLAY_LINE_1);
         if (is_button_pressed(&sensors)) {
           state = OFF;
           display_write("", DISPLAY_LINE_1);
-        } else if (sensors.bumps_wheelDrops.bumpLeft || sensors.bumps_wheelDrops.bumpRight || sensors.bumps_wheelDrops.bumpCenter) {
-          state = OBSTACLE_BACK_UP;
-          display_write("OBSTACLE", DISPLAY_LINE_0);
-          if (!sensors.bumps_wheelDrops.bumpCenter){
-            left = sensors.bumps_wheelDrops.bumpLeft && !sensors.bumps_wheelDrops.bumpRight;
-          }
-          prev_encoder = sensors.rightWheelEncoder;
-        } else if (distance >= 0.5) {
-          state = TURNING;
-          angle = 0;
-          mpu9250_start_gyro_integration();
-        } else {
-          // perform state-specific actions here
-          display_write("DRIVING", DISPLAY_LINE_0);
-          kobukiDriveDirect(100,100);
-          state = DRIVING;
-        }
-        break; // each case needs to end with break!
-      }
-      case TURNING: {
-
-        angle = mpu9250_read_gyro_integration().z_axis;
-        char buf[16];
-        snprintf(buf,16,"%f", angle);
-        display_write(buf, DISPLAY_LINE_1);
-        if (is_button_pressed(&sensors)) {
-          state = OFF;
-          display_write("", DISPLAY_LINE_1);
-        } else if (sensors.bumps_wheelDrops.bumpLeft || sensors.bumps_wheelDrops.bumpRight || sensors.bumps_wheelDrops.bumpCenter) {
-          state = OBSTACLE_BACK_UP;
-          display_write("OBSTACLE", DISPLAY_LINE_0);
-          if (!sensors.bumps_wheelDrops.bumpCenter){
-            left = sensors.bumps_wheelDrops.bumpLeft && !sensors.bumps_wheelDrops.bumpRight;
-          }
-          prev_encoder = sensors.rightWheelEncoder;
-        } else if (abs(angle) >= 90) {
-          state = DRIVING;
+        } else if (deviation >= deviation_1) {
+          state = GOING_BACK;
           mpu9250_stop_gyro_integration();
           prev_encoder = sensors.rightWheelEncoder;
         } else {
-          display_write("TURNING", DISPLAY_LINE_0);
-          kobukiDriveDirect(-50,50);
-          state = TURNING;
+          display_write("ALIGNING", DISPLAY_LINE_0);
+          kobukiDriveDirect(s*50,-s*50);
+          state = ALIGNING;
+        }
+        break; // each case needs to end with break!
+      }
+      case GOING_BACK: {
+        uint16_t next_encoder = sensors.rightWheelEncoder;
+        distance = measure_distance(next_encoder, prev_encoder);
+        char buf[16];
+        snprintf(buf,16,"%f", start_distance-distance);
+        display_write(buf, DISPLAY_LINE_1);
+        if (is_button_pressed(&sensors)) {
+          state = OFF;
+          display_write("", DISPLAY_LINE_1);
+        } else if (distance >= start_distance) {
+          state = ORIENTING;
+          mpu9250_start_gyro_integration();
+          deviation = 0;
+        } else {
+          display_write("GOING_BACK", DISPLAY_LINE_0);
+          kobukiDriveDirect(100,100);
+          state = GOING_BACK;
         }
         break;
       }
