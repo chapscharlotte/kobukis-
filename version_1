@@ -115,14 +115,33 @@ int main(void) {
   // initialize Kobuki
   kobukiInit();
   printf("Kobuki initialized!\n");
+  
+  // INITIAL POSITION 
+  float initial_x = rand(-3,3);
+  float initial_y = rand(-3,3);
+  float initial_angle = pi/2;
 
-  // configure initial state
+  // MAIN COMPUTER DATA CURRENT STATE 
+  float current_angle = rand(-pi,pi);
+  float current_x = rand(-3,3);
+  float current_y = rand(-3,3);
+  
+  float angle = 0;
+  bool left = false;
+  
+  // CALCULUS
+  float theta = atan((current_y-initial_y)/(current_x-initial_x);
+  float distance = sqrt((current_y-initial_y)^2+(current_x-initial_x)^2);
+  deviation_1 = pi+theta-current_angle;
+  deviation_2 = initial_angle-(pi+theta);
+  
+  
+  // INITIAL CONDITITONS
   robot_state_t state = OFF;
   KobukiSensors_t sensors = {0};
   uint16_t prev_encoder = 0;
-  float angle = 0;
-  bool left = false;
-
+  
+  
   // loop forever, running state machine
   while (1) {
     // read sensors from robot
@@ -133,7 +152,7 @@ int main(void) {
     //  in printf's in this loop breaking JTAG
     nrf_delay_ms(100);
 
-    // handle states
+    // HANDLE STATES
     switch(state) {
       case OFF: {
         // transition logic
