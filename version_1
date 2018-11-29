@@ -1,4 +1,4 @@
-// Robot Template app
+// GOING BACK TO INITIAL POSITION 
 //
 // Framework for creating applications that control the Kobuki robot
 
@@ -128,7 +128,7 @@ int main(void) {
   error_code = nrf_drv_spi_init(&spi_instance, &spi_config, NULL, NULL);
   APP_ERROR_CHECK(error_code);
   display_init(&spi_instance);
-  display_write("Hello, Human!", DISPLAY_LINE_0);
+  display_write("Hello, Huma!n", DISPLAY_LINE_0);
   printf("Display initialized!\n");
 
   // initialize i2c master (two wire interface)
@@ -173,6 +173,7 @@ int main(void) {
   robot_state_t state = OFF;
   KobukiSensors_t sensors = {0};
   uint16_t prev_encoder = 0;
+
   
   
   // loop forever, running state machine
@@ -184,6 +185,28 @@ int main(void) {
     // Note: removing this delay will make responses quicker, but will result
     //  in printf's in this loop breaking JTAG
     nrf_delay_ms(100);
+
+    // test giration
+
+    mpu9250_start_gyro_integration();
+    deviation = mpu9250_read_gyro_integration().z_axis;
+    char buf[16];
+    snprintf(buf,16,"%f", deviation);
+    display_write(buf, DISPLAY_LINE_1);
+    if (is_button_pressed(&sensors)) {
+      state = OFF;
+      display_write("", DISPLAY_LINE_1);
+    } else if (deviation >= 180) {
+      state = OFF;
+      mpu9250_stop_gyro_integration();
+    } else {
+    // perform state-specific actions here
+      display_write("TURNING", DISPLAY_LINE_0);
+      kobukiDriveDirect(50,-50);
+        
+        }
+
+
 
     // HANDLE STATES
     switch(state) {
@@ -200,67 +223,67 @@ int main(void) {
         break; // each case needs to end with break!
       }
 
-      case ALIGNING: {
-        // transition logic
-        deviation = mpu9250_read_gyro_integration().z_axis;
-        char buf[16];
-        snprintf(buf,16,"%f", deviation_1-deviation);
-        display_write(buf, DISPLAY_LINE_1);
-        if (is_button_pressed(&sensors)) {
-          state = OFF;
-          display_write("", DISPLAY_LINE_1);
-        } else if (deviation >= deviation_1) {
-          state = GOING_BACK;
-          mpu9250_stop_gyro_integration();
-          prev_encoder = sensors.rightWheelEncoder;
-        } else {
-          display_write("ALIGNING", DISPLAY_LINE_0);
-          kobukiDriveDirect(s*50,-s*50);
-          state = ALIGNING;
-        }
-        break; // each case needs to end with break!
-      }
-      case GOING_BACK: {
-        uint16_t next_encoder = sensors.rightWheelEncoder;
-        distance = measure_distance(next_encoder, prev_encoder);
-        char buf[16];
-        snprintf(buf,16,"%f", start_distance-distance);
-        display_write(buf, DISPLAY_LINE_1);
-        if (is_button_pressed(&sensors)) {
-          state = OFF;
-          display_write("", DISPLAY_LINE_1);
-        } else if (distance >= start_distance) {
-          state = ORIENTING;
-          mpu9250_start_gyro_integration();
-          deviation = 0;
-        } else {
-          display_write("GOING_BACK", DISPLAY_LINE_0);
-          kobukiDriveDirect(100,100);
-          state = GOING_BACK;
-        }
-        break;
-      }
+      // case ALIGNING: {
+      //   // transition logic
+      //   deviation = mpu9250_read_gyro_integration().z_axis;
+      //   char buf[16];
+      //   snprintf(buf,16,"%f", deviation_1-deviation);
+      //   display_write(buf, DISPLAY_LINE_1);
+      //   if (is_button_pressed(&sensors)) {
+      //     state = OFF;
+      //     display_write("", DISPLAY_LINE_1);
+      //   } else if (deviation >= deviation_1) {
+      //     state = GOING_BACK;
+      //     mpu9250_stop_gyro_integration();
+      //     prev_encoder = sensors.rightWheelEncoder;
+      //   } else {
+      //     display_write("ALIGNING", DISPLAY_LINE_0);
+      //     kobukiDriveDirect(s*50,-s*50);
+      //     state = ALIGNING;
+      //   }
+      //   break; // each case needs to end with break!
+      // }
+      // case GOING_BACK: {
+      //   uint16_t next_encoder = sensors.rightWheelEncoder;
+      //   distance = measure_distance(next_encoder, prev_encoder);
+      //   char buf[16];
+      //   snprintf(buf,16,"%f", start_distance-distance);
+      //   display_write(buf, DISPLAY_LINE_1);
+      //   if (is_button_pressed(&sensors)) {
+      //     state = OFF;
+      //     display_write("", DISPLAY_LINE_1);
+      //   } else if (distance >= start_distance) {
+      //     state = ORIENTING;
+      //     mpu9250_start_gyro_integration();
+      //     deviation = 0;
+      //   } else {
+      //     display_write("GOING_BACK", DISPLAY_LINE_0);
+      //     kobukiDriveDirect(100,100);
+      //     state = GOING_BACK;
+      //   }
+      //   break;
+      // }
 
-      case ORIENTING: {
+      // case ORIENTING: {
 
-       deviation = mpu9250_read_gyro_integration().z_axis;
-       char buf[16];
-       snprintf(buf,16,"%f", deviation_2-deviation);
-       display_write(buf, DISPLAY_LINE_1);
-        if (is_button_pressed(&sensors)) {
-          state = OFF;
-          display_write("", DISPLAY_LINE_1);
-        } else if (deviation >=deviation_2) {
-          state = OFF;
-          mpu9250_stop_gyro_integration();
-        } else {
-          // perform state-specific actions here
-          display_write("ORIENTING", DISPLAY_LINE_0);
-          kobukiDriveDirect(s*50,s*50);
-          state = ORIENTING;
-        }
-        break;
-      }
+      //  deviation = mpu9250_read_gyro_integration().z_axis;
+      //  char buf[16];
+      //  snprintf(buf,16,"%f", deviation_2-deviation);
+      //  display_write(buf, DISPLAY_LINE_1);
+      //   if (is_button_pressed(&sensors)) {
+      //     state = OFF;
+      //     display_write("", DISPLAY_LINE_1);
+      //   } else if (deviation >=deviation_2) {
+      //     state = OFF;
+      //     mpu9250_stop_gyro_integration();
+      //   } else {
+      //     // perform state-specific actions here
+      //     display_write("ORIENTING", DISPLAY_LINE_0);
+      //     kobukiDriveDirect(s*50,s*50);
+      //     state = ORIENTING;
+      //   }
+      //   break;
+      // }
     }  
   }  
 }
