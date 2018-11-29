@@ -37,10 +37,12 @@ typedef enum {
   ORIENTING,
 } robot_state_t;
 
-//  BASIC CALCUL FUNCTIONS
+//  BASIC CALCUL FUNCTIONS and constants
 
-static int sgn(current,previous) {
-  if (current > previous) {
+float Pi = M_PI;
+
+static int sgn(float number) {
+  if (number > 0) {
     return 1;
   }
   else {
@@ -53,12 +55,13 @@ static int sgn(current,previous) {
 static float printRandoms(int lower, int upper,  
                              int count) 
 { 
-    int i; 
+    int i;
+    float num; 
     for (i = 0; i < count; i++) { 
-        float num = (rand() % 
+        num = (rand() % 
           (upper - lower + 1)) + lower; 
-        return num; 
     } 
+    return num; 
 } 
 
 
@@ -157,11 +160,10 @@ int main(void) {
   
   float deviation = 0;
   float distance = 0;
-  bool left = false;
   
   // CALCULUS
   float theta = atan((current_y-initial_y)/(current_x-initial_x));
-  float start_distance = sqrt((current_y-initial_y)^2+(current_x-initial_x)^2);
+  float start_distance = sqrt((current_y-initial_y)*(current_y-initial_y)+(current_x-initial_x)*(current_x-initial_x));
   int s = sgn(current_angle-theta);
   float deviation_1 = s*(Pi+theta)-current_angle;
   float deviation_2 = initial_angle-(Pi+theta);
