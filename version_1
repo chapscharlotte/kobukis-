@@ -1,4 +1,4 @@
-/ Robot Template app
+// Robot Template app
 //
 // Framework for creating applications that control the Kobuki robot
 
@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "app_error.h"
 #include "app_timer.h"
@@ -17,16 +18,6 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_pwr_mgmt.h"
 #include "nrf_drv_spi.h"
-40
-​
-41
-static float measure_distance (uint16_t current_encoder, uint16_t previous_encoder) {
-42
-  const float CONVERSION = 0.00008529;
-43
-  float result;
-44
-  if (current_encod
 
 #include "buckler.h"
 #include "display.h"
@@ -41,22 +32,37 @@ NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
 
 typedef enum {
   OFF,
-  ALIGNING;
-  GOING_BACK;
-  ORIENTING;
+  ALIGNING,
+  GOING_BACK,
+  ORIENTING,
 } robot_state_t;
 
+//  BASIC CALCUL FUNCTIONS
 
 static int sgn(current,previous) {
-  if current> previous {
-    return 1
+  if (current > previous) {
+    return 1;
   }
   else {
-    return -1
+    return -1;
   }
-  }
+}
 
-  
+// Generates and prints 'count' random 
+// numbers in range [lower, upper]. 
+static float printRandoms(int lower, int upper,  
+                             int count) 
+{ 
+    int i; 
+    for (i = 0; i < count; i++) { 
+        float num = (rand() % 
+          (upper - lower + 1)) + lower; 
+        return num; 
+    } 
+} 
+
+
+// MEASURES ON KOBUKI FUNCTIONS (DISTANCE AND ANGLE)
 
 static float measure_distance (uint16_t current_encoder, uint16_t previous_encoder) {
   const float CONVERSION = 0.00008529;
@@ -87,6 +93,7 @@ static float measure_negative_distance (uint16_t current_encoder, uint16_t previ
   }
   return result;
 }
+
 
 int main(void) {
   ret_code_t error_code = NRF_SUCCESS;
@@ -136,14 +143,15 @@ int main(void) {
   printf("Kobuki initialized!\n");
   
   // INITIAL POSITION 
-  float initial_x = rand(-3,3);
-  float initial_y = rand(-3,3);
-  float initial_angle = pi/2;
+  float initial_x = printRandoms(-3, 13, 1);
+  float initial_y = printRandoms(-3, 3, 1);
+  float initial_angle = Pi/2;
 
   // MAIN COMPUTER DATA CURRENT STATE 
-  float current_angle = rand(-pi,pi);
-  float current_x = rand(-1,1);
-  float current_y = rand(-1,1);
+  int master = 0;
+  float current_angle = printRandoms(-Pi, Pi, 1);
+  float current_x = printRandoms(-1, 1, 1);
+  float current_y = printRandoms(-1, 1, 1);
  
  // VARIABLES DEFINITION 
   
@@ -152,11 +160,11 @@ int main(void) {
   bool left = false;
   
   // CALCULUS
-  float theta = atan((current_y-initial_y)/(current_x-initial_x);
+  float theta = atan((current_y-initial_y)/(current_x-initial_x));
   float start_distance = sqrt((current_y-initial_y)^2+(current_x-initial_x)^2);
-  s = sgn(current_angle-theta);
-  float deviation_1 = s*(pi+theta)-current_angle;
-  float deviation_2 = initial_angle-(pi+theta);
+  int s = sgn(current_angle-theta);
+  float deviation_1 = s*(Pi+theta)-current_angle;
+  float deviation_2 = initial_angle-(Pi+theta);
   
   
   // INITIAL CONDITITONS
@@ -178,7 +186,7 @@ int main(void) {
     // HANDLE STATES
     switch(state) {
       case OFF: {
-       if (master==1)
+       if (master==1) {
           state = ALIGNING; 
            deviation = 0; 
           mpu9250_start_gyro_integration();
@@ -233,24 +241,24 @@ int main(void) {
 
       case ORIENTING: {
 
-        uint16_t next_encoder = sensors.rightWheelEncoder;
-        distance = measure_negative_distance(next_encoder, prev_encoder);
-        char buf[16];
-        snprintf(buf,16,"%f", distance);
-        display_write(buf, DISPLAY_LINE_1);
+       deviation = mpu9250_read_gyro_integration().z_axis;
+       char buf[16];
+       snprintf(buf,16,"%f", deviation_2-deviation);
+       display_write(buf, DISPLAY_LINE_1);
         if (is_button_pressed(&sensors)) {
           state = OFF;
           display_write("", DISPLAY_LINE_1);
-        } else if (distance >= 0.1) {
-          state = OBSTACLE_TURN;
-          angle = 0;
-          mpu9250_start_gyro_integration();
+        } else if (deviation >=deviation_2) {
+          state = OFF;
+          mpu9250_stop_gyro_integration();
         } else {
           // perform state-specific actions here
-          display_write("OBSTACLE", DISPLAY_LINE_0);
-          kobukiDriveDirect(-100,-100);
-          state = OBSTACLE_BACK_UP;
+          display_write("ORIENTING", DISPLAY_LINE_0);
+          kobukiDriveDirect(s*50,s*50);
+          state = ORIENTING;
         }
         break;
       }
+    }  
+  }  
 }
