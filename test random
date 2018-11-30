@@ -1,4 +1,5 @@
 
+
 // GOING BACK TO INITIAL POSITION 
 //
 // Framework for creating applications that control the Kobuki robot
@@ -63,17 +64,16 @@ static float printRandoms(int lower, int upper, int count) {
     return num; 
 } 
 
-// static robot_state_rand stateRandoms(int i) { 
-//   robot_state_rand st;
-//   if (i==1) { 
-//     st = OFF;
-//     return st;
-//   } else if (i==2) {
-//     st = DRIVING; 
-//     return st; 
-//   }
-// } 
-
+static robot_state_rand stateRandoms(int i) { 
+  robot_state_rand st;
+  if (i==1) { 
+    st = OFF;
+    return st;
+  } else {
+    st = DRIVING; 
+    return st;
+} 
+}
 // static time_rand,distance_rand,angle_rand parameterRandoms(state_rand) { 
 //     int i = floor(printRandoms(1,6,1));
 //     return states[i]; 
@@ -157,7 +157,7 @@ int main(void) {
   error_code = nrf_drv_spi_init(&spi_instance, &spi_config, NULL, NULL);
   APP_ERROR_CHECK(error_code);
   display_init(&spi_instance);
-  display_write("Hello, Huma!n", DISPLAY_LINE_0);
+  display_write("HI", DISPLAY_LINE_0);
   printf("Display initialized!\n");
 
   // initialize i2c master (two wire interface)
@@ -214,15 +214,16 @@ int main(void) {
   // TIMER INITIALISATION 
   uint32_t previous_time = 0;
   uint32_t next_time = 0;
-  virtual_timer_init ();
+  virtual_timer_init();
+  display_write("END", DISPLAY_LINE_0);
 
 
-  
   // loop forever, running state machine
   while (1) {
     // read sensors from robot
+    display_write("LOOP", DISPLAY_LINE_0);
     kobukiSensorPoll(&sensors);
-
+    display_write("POOL", DISPLAY_LINE_0);
     // delay before continuing
     // Note: removing this delay will make responses quicker, but will result
     //  in printf's in this loop breaking JTAG
@@ -243,7 +244,7 @@ int main(void) {
         } else {
           // perform state-specific actions here
           display_write("OFF", DISPLAY_LINE_0);
-          kobukiDriveDirect(0,0);
+          kobukiDriveDirect(10,10);
           state_rand = OFF;
         }
 
@@ -285,6 +286,8 @@ int main(void) {
         }
           break;
       }   
+
     }
+     nrf_delay_ms(1000);
   }
 }
