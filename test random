@@ -34,6 +34,7 @@ NRF_TWI_MNGR_DEF(twi_mngr_instance, 5, 0);
 
 typedef enum {
   OFF,
+  OFF_BUTTON,
   DRIVING,
   TURNING,
   OBSTACLES_BACK_UP,
@@ -241,7 +242,10 @@ int main(void) {
         char buf[16];
         snprintf(buf,16,"%ld", next_time-previous_time);
         display_write(buf, DISPLAY_LINE_1);
-        if (next_time-previous_time>=time_rand) {
+         if (is_button_pressed(&sensors)) {
+          state_rand = OFF_BUTTON;
+          display_write("", DISPLAY_LINE_1);
+        } else if (next_time-previous_time>=time_rand) {
             next_time = 0;
             int i = printRandoms(1,3,1);
             printf("%u\n", i);
@@ -270,6 +274,22 @@ int main(void) {
         break;
       }
 
+      case OFF_BUTTON: {
+        if (is_button_pressed(&sensors)) {
+          state_rand = OFF;
+          previous_time = read_timer();
+          time_rand = printRandoms(1000000,3000000,1); 
+        } else {
+          // perform state-specific actions here
+          display_write("OFF_BUTTON", DISPLAY_LINE_0);
+          kobukiDriveDirect(0,0);
+          state_rand = OFF_BUTTON;
+        }
+
+        break;
+      }
+
+
 
       case DRIVING: {
 
@@ -280,9 +300,8 @@ int main(void) {
         snprintf(buf,16,"%f", distance);
         display_write(buf, DISPLAY_LINE_1);
         if (is_button_pressed(&sensors)) {
-          state_rand = OFF;
+          state_rand = OFF_BUTTON;
           display_write("", DISPLAY_LINE_1);
-          previous_time = read_timer();
         } else if (sensors.bumps_wheelDrops.bumpLeft || sensors.bumps_wheelDrops.bumpRight || sensors.bumps_wheelDrops.bumpCenter) {
           state_rand = OBSTACLES_BACK_UP;
           display_write("OBSTACLE", DISPLAY_LINE_0);
@@ -328,7 +347,7 @@ int main(void) {
           snprintf(buf,16,"%f", angle);
           display_write(buf, DISPLAY_LINE_1);
           if (is_button_pressed(&sensors)) {
-            state_rand = OFF;
+            state_rand = OFF_BUTTON;
             display_write("", DISPLAY_LINE_1);
           } else if (sensors.bumps_wheelDrops.bumpLeft || sensors.bumps_wheelDrops.bumpRight || sensors.bumps_wheelDrops.bumpCenter) {
             state_rand = OBSTACLES_BACK_UP;
