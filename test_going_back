@@ -183,7 +183,7 @@ int main(void) {
   
   // CALCULUS
   float theta = (180/Pi)*atan((current_y-initial_y)/(current_x-initial_x));
-  float start_distance = 2;
+  float start_distance = 1;
   //sqrt((current_y-initial_y)*(current_y-initial_y)+(current_x-initial_x)*(current_x-initial_x));
   int s = sgn(current_angle-theta);
   float deviation_1 = 90;
@@ -193,7 +193,7 @@ int main(void) {
 
     // INITIAL CONDITITONS
   // robot_state_rand state_rand = OFF;
-  robot_state_back state_back = GOING_BACK;
+  robot_state_back state_back = ALIGNING;
   KobukiSensors_t sensors = {0};
   uint16_t prev_encoder = 0;
   
@@ -261,7 +261,7 @@ int main(void) {
           state_back = OFF;
           display_write("", DISPLAY_LINE_1);
         } else if (abs(deviation) >= abs(deviation_1)) {
-          state_back = OFF;
+          state_back = GOING_BACK;
           mpu9250_stop_gyro_integration();
           prev_encoder = sensors.rightWheelEncoder;
         } else {
@@ -281,8 +281,8 @@ int main(void) {
         if (is_button_pressed(&sensors)) {
           state_back = OFF;
           display_write("", DISPLAY_LINE_1);
-        // } else if (distance >= start_distance) {
-        //   state = ORIENTING;
+        } else if (distance >= start_distance) {
+          state_back = OFF;
         //   mpu9250_start_gyro_integration();
         //   deviation = 0;
         } else {
