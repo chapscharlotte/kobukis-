@@ -47,6 +47,7 @@ float current_x = 0;
 float current_y = 0;
 int master = 0;
 int current_rx_id = 0;
+bool inside = true;
 
 // VARIABLES DEFINITION
 float deviation = 0;
@@ -206,6 +207,13 @@ void ble_evt_adv_report(ble_evt_t const* p_ble_evt) {
       memcpy(&initial_x, &temp, 4);
       temp = (adv_buf[18]<<24) + (adv_buf[19]<<16) + (adv_buf[20]<<8) + adv_buf[21];
       memcpy(&initial_y, &temp, 4);
+      initial_angle = adv_buf[22];
+
+      if (adv_buf[23] == 1) {
+        inside = true;
+      } else {
+        inside = false;
+      }
       //printf("Initial x: %f\n", initial_x);
       //printf("Initial y: %f\n", initial_y);
     }
