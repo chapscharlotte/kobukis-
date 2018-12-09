@@ -183,9 +183,21 @@ int main(void) {
   // CALCULUS
   float theta = (180/Pi)*atan((current_y-initial_y)/(current_x-initial_x));
   float start_distance = sqrt((current_y-initial_y)*(current_y-initial_y)+(current_x-initial_x)*(current_x-initial_x));
-  int s = sgn(current_angle-theta);
+ 
   float deviation_1 = 90;
+  int s = sgn(deviation_1);
   deviation_1 = measure_angle(deviation_1);
+  
+  if (deviation_1>180) {
+    deviation_1 = 360- deviation_1; 
+    s = -s; 
+  } else if (-180<deviation_1<0) {
+    s = -s;
+  } else if (deviation_1 < -180 {
+    deviation_1 = deviation_1 + 360; 
+  }
+  
+    
   // s*((180+theta)-current_angle);
   float deviation_2 = initial_angle-(Pi+theta);
 
