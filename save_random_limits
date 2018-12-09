@@ -465,10 +465,10 @@ int main(void) {
       if (is_button_pressed(&sensors)) {
         state = OFF;
         display_write("", DISPLAY_LINE_1);
-        mpu9250_stop_gyro_integration().
+        mpu9250_stop_gyro_integration();
       } else if (abs(angle) >= angle_limit) {
         state = RANDOM;
-        mpu9250_stop_gyro_integration().
+        mpu9250_stop_gyro_integration();
       } else {
         display_write("LIMITS", DISPLAY_LINE_0);
         if(left){
