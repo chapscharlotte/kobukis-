@@ -456,28 +456,27 @@ int main(void) {
         }
         break;
       }
-
       case AVOIDING_LIMITS: {
-      angle = mpu9250_read_gyro_integration().z_axis;
-      char buf[16];
-      snprintf(buf,16,"%f", angle);
-      display_write(buf, DISPLAY_LINE_1);
-      if (is_button_pressed(&sensors)) {
-        state = OFF;
-        display_write("", DISPLAY_LINE_1);
-        mpu9250_stop_gyro_integration();
-      } else if (abs(angle) >= angle_limit) {
-        state = RANDOM;
-        mpu9250_stop_gyro_integration();
-      } else {
-        display_write("LIMITS", DISPLAY_LINE_0);
-        if(left){
-          kobukiDriveDirect(50,-50);
+        angle = mpu9250_read_gyro_integration().z_axis;
+        char buf[16];
+        snprintf(buf,16,"%f", angle);
+        display_write(buf, DISPLAY_LINE_1);
+        if (is_button_pressed(&sensors)) {
+          state = OFF;
+          display_write("", DISPLAY_LINE_1);
+          mpu9250_stop_gyro_integration();
+        } else if (abs(angle) >= angle_limit) {
+          state = RANDOM;
+          mpu9250_stop_gyro_integration();
         } else {
-          kobukiDriveDirect(-50,50);
-        }    
-        state = AVOIDING_LIMITS;
-      }
+            if(left){
+              kobukiDriveDirect(50,-50);
+            } else {
+              kobukiDriveDirect(-50,50);
+            }    
+          display_write("LIMITS", DISPLAY_LINE_0);
+          state = AVOIDING_LIMITS;
+        }
       break;
     }
   }
